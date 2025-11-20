@@ -43,16 +43,16 @@ const light = {
             borderWidth: 1,
             paddingHorizontal: 12,
             backgroundColor: palette.dark[700],
-            borderColor: palette.dark[500],
+            borderColor: palette.dark[100],
             textColor: palette.light[200],
             placeholderColor: palette.light[600],
         },
         button: {
             height: 42,
-            borderRadius: 8,
+            borderRadius: 6,
             borderWidth: 1,
             backgroundColor: palette.dark[700],
-            borderColor: palette.dark[500],
+            borderColor: palette.dark[100],
             textColor: palette.light[200],
         },
     },
@@ -61,7 +61,7 @@ const light = {
     headerBackgroundColor: palette.light[100],
     tabBarInactive: palette.dark[100],
     tabBarActive: palette.red[100],
-    headerTintColor: palette.dark[100]
+    headerTintColor: palette.light[100]
 };
 
 const dark = {
@@ -122,8 +122,8 @@ const dark = {
         },
     },
 
-    tabBarBackgroundColor: palette.light[100],
-    headerBackgroundColor: palette.light[100],
+    tabBarBackgroundColor: palette.dark[400],
+    headerBackgroundColor: palette.dark[400],
     tabBarInactive: palette.dark[100],
     tabBarActive: palette.red[100],
     headerTintColor: palette.dark[100],

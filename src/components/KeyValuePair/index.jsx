@@ -1,6 +1,6 @@
-import { P } from "@components/Text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, View } from "react-native";
+import { P } from "@components";
 import { useTheme } from "@theme/useTheme";
 
 const KeyValuePair = ({ label, value, onPress }) => {
@@ -8,7 +8,6 @@ const KeyValuePair = ({ label, value, onPress }) => {
 
     const isPressable = typeof onPress === "function"
 
-    // Shared style for both Pressable and View
     const baseStyle = {
         flexDirection: "row",
         justifyContent: "space-between",

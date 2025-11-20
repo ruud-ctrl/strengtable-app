@@ -1,33 +1,29 @@
-import PageWrapper from "@components/PageWrapper";
-import Button from "@components/Button";
-import { Caption, H1, H2, P, Small } from "@components/Text";
+import { Caption, H2, P, Small, Panel, Button, PageWrapper } from "@components";
 import { View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useTheme } from "@theme/useTheme";
-
-
-import Panel from "@components/Panel";
+import { useErrorSnackbar } from "@hooks/useSnackbar";
 
 export default function Home() {
   const colors = useTheme().colors;
   const navigation = useNavigation();
+  const showError = useErrorSnackbar();
 
-    const onDoWorkout = useCallback(
-      (program) => {
-        navigation.navigate("SingleWorkout", { id: 1 });
-      },
-      [navigation]
-    );
-  
+  const onDoWorkout = useCallback(
+    (program) => {
+      navigation.navigate("SingleWorkout", { id: 1 });
+    },
+    [navigation]
+  );
 
   return (
-    <PageWrapper onRefresh={() => { }}>
-      <H1>Home</H1>
+    <PageWrapper onRefresh={() => { console.log("hoi") }} pageHeading={"Home"}>
       <Caption>Hello there!</Caption>
       <P>Bottom tab navigator for React Navigation following iOS design guidelines.
         Installation instructions and documentation can be found</P>
       <Panel>
+        <Button title="Test" onPress={() => showError("Oops")} />
         <View flexDirection={"row"}>
           <View>
             <H2>Next Workout</H2>
@@ -38,7 +34,7 @@ export default function Home() {
         <Small>Bottom tab navigator for React Navigation following iOS design guidelines.
           Installation instructions and documentation can be found</Small>
       </Panel>
-      <Button size="sm" style={{ marginLeft: "auto" }} title="Go To Exercises" onPress={() => navigation.navigate("Exercise")} />
+      <Button size="sm" style={{ marginLeft: "auto" }} title="Go To Exercises" onPress={() => navigation.navigate("Exercises")} />
       <Button size="sm" style={{ marginLeft: "auto" }} title="Go To Weight History" onPress={() => navigation.navigate("WeightHistory")} />
     </PageWrapper>
   );

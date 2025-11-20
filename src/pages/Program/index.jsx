@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
-import PageWrapper from "@components/PageWrapper";
-import Text, {H1} from "@components/Text";
+import { ActivityIndicator, Alert, FlatList, View } from "react-native";
+import { Text, PageWrapper, ErrorStatePanel, Refresher } from "@components";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "@theme/useTheme";
 import { usePrograms } from "@hooks/usePrograms";
@@ -37,8 +36,8 @@ export default function Program() {
   }, [navigation]);
 
   const onSelect = useCallback(
-    (program) => {
-      navigation.navigate("SingleProgram", { id: program.id });
+    (item) => {
+      navigation.navigate("SingleProgram", { id: item.id });
     },
     [navigation]
   );
@@ -57,7 +56,6 @@ export default function Program() {
               try {
                 await deleteProgram(item.id);
               } catch (e) {
-                // Snackbar is already handled in the hook's onError
               }
             },
           },
@@ -69,7 +67,7 @@ export default function Program() {
 
   const Item = useCallback(
     ({ item }) => (
-      <ProgramTile item={item} confirmDelete={confirmDelete} onSelect={onSelect} />
+      <ProgramTile item={item} onLongPress={confirmDelete} onPress={onSelect} />
     ),
     [colors, confirmDelete]
   );
@@ -79,9 +77,9 @@ export default function Program() {
   const EmptyState = useMemo(
     () => (
       <View>
-        <Text style={[ { color: colors.text }]}>No workouts yet</Text>
-        <Text style={[ { color: colors.muted }]}>
-          Tap the + button to create your first exercise.
+        <Text style={[{ color: colors.text }]}>No Programs yet</Text>
+        <Text style={[{ color: colors.muted }]}>
+          Tap the + button to create your first program.
         </Text>
       </View>
     ),
@@ -92,50 +90,44 @@ export default function Program() {
 
   let body = null;
 
-
-
-    if (isLoading) {
-        body = (
-            <View>
-                <ActivityIndicator />
-            </View>
-        );
-    } else if (isError) {
-        body = (
-            <View>
-                <Text style={{ color: colors.danger || "#d9534f", marginBottom: 8 }}>
-                    Failed to load workouts.
-                </Text>
-                <TouchableOpacity onPress={handleRefresh} style={[ { borderColor: colors.border }]}>
-                    <Text style={{ color: colors.text }}>Try again</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    } else {
-        body = (
-            <FlatList
-                data={data}
-                keyExtractor={keyExtractor}
-                renderItem={Item}
-                ItemSeparatorComponent={() => <View style={[ { backgroundColor: colors.border }]} />}
-                ListEmptyComponent={EmptyState}
-                contentContainerStyle={[data.length === 0 && { flex: 1 }]}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.text} />
-                }
-            />
-        );
-    }
-
-    return (
-        <PageWrapper
-            scroll={false}
-            headerRightIcon={"add-outline"}
-            headerRightAction={headerRightAction}
-            onRefresh={handleRefresh}
-        >
-            <H1 style={{ color: colors.text, marginBottom: 12 }}>Workouts</H1>
-            {body}
-        </PageWrapper>
+  if (isLoading) {
+    body = (
+      <View>
+        <ActivityIndicator />
+      </View>
     );
+  } else if (isError) {
+    body = (
+      <ErrorStatePanel
+        message="Failed to load programs."
+        onRetry={handleRefresh}
+      />
+    );
+  } else {
+    body = (
+      <FlatList
+        data={data}
+        keyExtractor={keyExtractor}
+        renderItem={Item}
+        // ItemSeparatorComponent={() => <View  />}
+        ListEmptyComponent={EmptyState}
+        contentContainerStyle={[data.length === 0 && { flex: 1 }]}
+                        refreshControl={
+                            <Refresher isFetching={programs.isFetching} refetch={programs.refetch} />
+                        }
+      />
+    );
+  }
+
+  return (
+    <PageWrapper
+      scroll={false}
+      headerRightIcon={"add-outline"}
+      headerRightAction={headerRightAction}
+      onRefresh={handleRefresh}
+      pageHeading={"Programs"}
+    >
+      {body}
+    </PageWrapper>
+  );
 }

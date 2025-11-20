@@ -1,5 +1,5 @@
 // usePersonal.ts
-import { useGetQuery, usePutMutation } from "@utils/apiHooks";
+import { useGetQuery, usePutMutation, usePostMutation } from "@utils/apiHooks";
 import { useErrorSnackbar, useSuccessSnackbar } from "./useSnackbar";
 
 export const usePersonal = () => {
@@ -7,6 +7,7 @@ export const usePersonal = () => {
   const setError = useErrorSnackbar();
 
   const userProfile = useGetQuery(["profile"], "/user/profile");
+  const getWeight = useGetQuery(["weight"], "/user/weight");
 
   const mutateSetActive = usePutMutation(
     ["profile", "setActive"],
@@ -72,9 +73,9 @@ export const usePersonal = () => {
     }
   );
 
-  const mutateAddWeight = usePutMutation(
+  const mutateAddWeight = usePostMutation(
     ["profile", "addWeight"],
-    "/user/add-weight",
+    "/user/weight",
     {
       onMutate: (qc, { value }) => {
         const key = ["profile"];
@@ -110,6 +111,7 @@ export const usePersonal = () => {
 
   return {
     userProfile,
+    getWeight,
     setActiveProgram,
     setTheme,
     setUnitType,

@@ -1,8 +1,5 @@
-import Chip from '@components/Chip'
-import KeyValuePair from '@components/KeyValuePair'
-import Panel from '@components/Panel'
-import { H2 } from '@components/Text'
 import { View } from 'react-native'
+import { Chip, KeyValuePair, Panel, H2 } from '@components'
 import { formatDate } from '@utils/formatDate'
 
 const UserAccount = ({userProfile}) => {
@@ -12,7 +9,7 @@ const UserAccount = ({userProfile}) => {
     : "muted";
 
   return (
-      <Panel style={{ marginTop: 16 }}>
+      <Panel>
         <H2>Account</H2>
         <View style={{ height: 8 }} />
         <KeyValuePair label="Firstname" value={userProfile?.firstname || "—"} />

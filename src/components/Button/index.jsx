@@ -4,7 +4,7 @@ import { ActivityIndicator, Platform, Pressable, Text } from 'react-native';
 
 const SIZES = {
   sm: { padH: 8, font: 12, icon: 14, height: 32 },
-  md: {  padH: 12, font: 14, icon: 16, height: 42 },
+  md: {  padH: 8, font: 14, icon: 16, height: 32 },
   lg: { padH: 20, font: 18, icon: 20, height: 32 },
 };
 

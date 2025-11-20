@@ -50,7 +50,49 @@ export const usePrograms = () => {
         }
     );
 
-    const addprogram = async (payload) => createProgram(payload);
+        const deleteProgramMut = useDeleteMutation(
+            ["program", "delete"],
+            ({ id }) => `/program/${id}`,
+            {
+                onMutate: (qcLocal, { id }) => {
+                    const client = qc ?? qcLocal;
+    
+                    const prevList = client.getQueryData(LIST_KEY) || [];
+                    const prevSingle = client.getQueryData(SINGLE_KEY(id));
+    
+                    // optimistic remove from list
+                    client.setQueryData(
+                        LIST_KEY,
+                        prevList.filter((w) => w.id !== id)
+                    );
+    
+                    // remove cached single workout
+                    client.removeQueries({ queryKey: SINGLE_KEY(id), exact: true });
+    
+                    return {
+                        prevList,
+                        prevSingle,
+                        rollback: () => {
+                            client.setQueryData(LIST_KEY, prevList);
+                            if (prevSingle) {
+                                client.setQueryData(SINGLE_KEY(id), prevSingle);
+                            }
+                        },
+                    };
+                },
+                onSuccess: () => {
+                    setSuccess("Program deleted!");
+                },
+                onError: (_err, _vars, ctx) => {
+                    ctx?.rollback?.();
+                    setError("Failed to delete program.");
+                },
+                invalidations: [LIST_KEY],
+            }
+        );
 
-    return { programs, addprogram };
+    const addprogram = async (payload) => createProgram(payload);
+    const deleteProgram = async (id) => deleteProgramMut({ id });
+
+    return { programs, addprogram, deleteProgram };
 };

@@ -9,46 +9,10 @@ const SINGLE_KEY = (id) => ["exercise", id];
 export const useExercises = () => {
   const setSuccess = useSuccessSnackbar();
   const setError = useErrorSnackbar();
-  const qc = useQueryClient?.(); // works if your wrapper uses RQ under the hood
+  const qc = useQueryClient?.();
 
-  // ---- LIST QUERY ----
   const exercises = useGetQuery(LIST_KEY, "/exercise");
 
-  // ---- UPDATE (PUT) ----
-  const mutateExercise = usePutMutation(
-    ["exercise", "update"],
-    ({ id }) => `/exercise/${id}`,
-    {
-      onMutate: (qcLocal, { id, payload }) => {
-        const client = qc ?? qcLocal;
-        const prevSingle = client.getQueryData(SINGLE_KEY(id));
-        const prevList = client.getQueryData(LIST_KEY);
-
-        if (prevSingle) client.setQueryData(SINGLE_KEY(id), { ...prevSingle, ...payload });
-        if (prevList) {
-          client.setQueryData(
-            LIST_KEY,
-            prevList.map((ex) => (ex.id === id ? { ...ex, ...payload } : ex))
-          );
-        }
-
-        return {
-          rollback: () => {
-            if (prevSingle) client.setQueryData(SINGLE_KEY(id), prevSingle);
-            if (prevList) client.setQueryData(LIST_KEY, prevList);
-          },
-        };
-      },
-      invalidations: [LIST_KEY],
-      onSuccess: () => setSuccess("Exercise updated"),
-      onError: (_err, _vars, ctx) => {
-        ctx?.rollback?.();
-        setError("Failed to update exercise");
-      },
-    }
-  );
-
-  // ---- CREATE (POST) ----
   const createExercise = usePostMutation(
     ["exercise", "create"],
     "/exercise",
@@ -87,8 +51,40 @@ export const useExercises = () => {
     }
   );
 
-  // ---- DELETE (DELETE) ----
-  const removeExercise = useDeleteMutation(
+  const mutateExercise = usePutMutation(
+    ["exercise", "update"],
+    ({ id }) => `/exercise/${id}`,
+    {
+      onMutate: (qcLocal, { id, payload }) => {
+        const client = qc ?? qcLocal;
+        const prevSingle = client.getQueryData(SINGLE_KEY(id));
+        const prevList = client.getQueryData(LIST_KEY);
+
+        if (prevSingle) client.setQueryData(SINGLE_KEY(id), { ...prevSingle, ...payload });
+        if (prevList) {
+          client.setQueryData(
+            LIST_KEY,
+            prevList.map((ex) => (ex.id === id ? { ...ex, ...payload } : ex))
+          );
+        }
+
+        return {
+          rollback: () => {
+            if (prevSingle) client.setQueryData(SINGLE_KEY(id), prevSingle);
+            if (prevList) client.setQueryData(LIST_KEY, prevList);
+          },
+        };
+      },
+      invalidations: [LIST_KEY],
+      onSuccess: () => setSuccess("Exercise updated"),
+      onError: (_err, _vars, ctx) => {
+        ctx?.rollback?.();
+        setError("Failed to update exercise");
+      },
+    }
+  );
+
+  const deleteExerciseMut = useDeleteMutation(
     ["exercise", "delete"],
     ({ id }) => `/exercise/${id}`,
     {
@@ -98,7 +94,7 @@ export const useExercises = () => {
         const prevSingle = client.getQueryData(SINGLE_KEY(id));
 
         client.setQueryData(LIST_KEY, prevList.filter((ex) => ex.id !== id));
-        try { client.setQueryData(SINGLE_KEY(id), undefined); } catch {}
+        try { client.setQueryData(SINGLE_KEY(id), undefined); } catch { }
 
         return {
           rollback: () => {
@@ -117,8 +113,8 @@ export const useExercises = () => {
   );
 
   const updateExercise = async (id, payload) => mutateExercise({ id, payload });
-  const addExercise    = async (payload)     => createExercise(payload);
-  const deleteExercise = async (id)          => removeExercise({ id });
+  const addExercise = async (payload) => createExercise(payload);
+  const deleteExercise = async (id) => deleteExerciseMut({ id });
 
   return { exercises, addExercise, updateExercise, deleteExercise };
 };

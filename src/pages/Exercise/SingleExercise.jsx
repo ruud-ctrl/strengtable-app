@@ -1,95 +1,161 @@
-// SingleProgram.tsx
-import React from "react";
-import { View } from "react-native";
-import PageWrapper from "@components/PageWrapper";
-import Panel from "@components/Panel";
-import Text, { Caption, H2, H3, P, Small } from "@components/Text";
-import { useTheme } from "@theme/useTheme";
-import { useProgram } from "@hooks/useProgram";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { PageWrapper, Text, Caption, TextField, ErrorStatePanel, DropDownSelect } from "@components";
 import { usePersonal } from "@hooks/usePersonal";
-import TextButton from "@components/TextButton";
+import { useExercise } from "@hooks/useExercise";
+import { useTheme } from "@theme/useTheme";
+import { MuscleGroupOptions, EquipmentTypeOptions, ExerciseTypeOptions } from "@constants/enums";
 
-export default function SingleExercise({ route }) {
-  const id = route.params?.id ?? "—";
-  const { program: { data: program } } = useProgram(id);
-  const { userProfile: { data: userProfile }, setActiveProgram } = usePersonal();
+export default function EditExercise({ route }) {
+  const id = route?.params?.id;
+
   const { colors } = useTheme();
+  const {
+    userProfile: { data: userProfile },
+  } = usePersonal();
 
-  const setActive = async (programId) => {
+  const {exercise} = useExercise(id);
+  const data = exercise?.data || {};
+  const isLoading = exercise?.isLoading;
+  const isError = exercise?.isError;
+  const refetch = exercise?.refetch;
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  // --- form state ---
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState(null);
+  const [selectedEquipmentType, setSelectedEquipmentType] = useState(null);
+  const [selectedExerciseType, setSelectedExerciseType] = useState(null);
+
+  // dropdown open/close state
+  const [openMG, setOpenMG] = useState(false);
+  const [openEQ, setOpenEQ] = useState(false);
+  const [openEX, setOpenEX] = useState(false);
+
+  // --- initialize form when exercise data loads ---
+  useEffect(() => {
+    if (!data) return;
+
+    setName(data.name ?? "");
+    setDescription(data.description ?? "");
+    setSelectedMuscleGroup(data.muscle_group);
+    setSelectedEquipmentType(data.equipment_type);
+    setSelectedExerciseType(data.exercise_type);
+  }, [data]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!refetch) return;
+    setRefreshing(true);
     try {
-      await setActiveProgram({ programId });
-    } catch (e) {
-      console.warn("Failed to set active program", e);
+      await refetch();
+    } finally {
+      setRefreshing(false);
     }
-  };
+  }, [refetch]);
 
-  const isActive = id === userProfile?.active_program;
+  let body = null;
 
-  return (
-    <PageWrapper title={program?.name ?? "SingleProgram"}>
-      <Panel>
-        <H2>{program?.name}</H2>
-        {program?.description ? (
-          <Text style={{ color: colors.contrast[300], marginTop: 4 }}>
-            {program?.description}
-          </Text>
-        ) : null}
+  if (!id) {
+    body = (
+      <View>
+        <Text style={{ color: colors.danger || "#d9534f" }}>
+          No exercise id provided.
+        </Text>
+      </View>
+    );
+  } else if (isLoading) {
+    body = (
+      <View>
+        <ActivityIndicator />
+      </View>
+    );
+  } else if (isError) {
+    body = (
+      <ErrorStatePanel
+        message="Failed to load exercise."
+        onRetry={handleRefresh}
+      />
+    );
+  } else {
+    body = (
+      <View style={{ gap: 12 }}>
+        <Caption>Exercise Name</Caption>
+        <TextField
+          value={name}
+          onChangeText={setName}
+          placeholder="Enter exercise name"
+        />
 
-        <View style={{ flexDirection: "row", gap: 12, marginTop: 8, alignItems: "center" }}>
-          <Text style={{ color: colors.contrast[300] }}>
-            ID: <Text style={{ color: colors.contrast[100] }}>{id}</Text>
-          </Text>
+        <Caption>Description</Caption>
+        <TextField
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Enter exercise description"
+          multiline
+        />
 
-          <Text style={{ color: colors.contrast[300] }}>
-            Status:{" "}
-            <Text style={{ color: isActive ? "#22c55e" : "#ef4444" }}>
-              {isActive ? "Active" : "Inactive"}
-            </Text>
-          </Text>
+        <Caption>Muscle Group</Caption>
+        <DropDownSelect
+          items={MuscleGroupOptions}
+          value={selectedMuscleGroup}
+          onChange={setSelectedMuscleGroup}
+          placeholder={data.muscle_group}
+          open={openMG}
+          setOpen={(open) => {
+            setOpenMG(open);
+            if (open) {
+              setOpenEQ(false);
+              setOpenEX(false);
+            }
+          }}
+          zIndex={openMG ? 4000 : 3000}
+          containerStyle={{ zIndex: openMG ? 4000 : 3000 }}
+          dropDownContainerStyle={{ zIndex: openMG ? 4000 : 3000 }}
+        />
 
-          {!isActive && (
-            <TextButton
-              title="Set Active"
-              rightIcon="star-outline"
-              underline
-              onPress={() => setActive(id)}
-            />
-          )}
-        </View>
-      </Panel>
+        <Caption>Equipment Type</Caption>
+        <DropDownSelect
+          items={EquipmentTypeOptions}
+          value={selectedEquipmentType}
+          onChange={setSelectedEquipmentType}
+          placeholder={data.equipment_type}
+          open={openEQ}
+          setOpen={(open) => {
+            setOpenEQ(open);
+            if (open) {
+              setOpenMG(false);
+              setOpenEX(false);
+            }
+          }}
+          zIndex={openEQ ? 3000 : 2000}
+          containerStyle={{ zIndex: openEQ ? 3000 : 2000 }}
+          dropDownContainerStyle={{ zIndex: openEQ ? 3000 : 2000 }}
+        />
 
-      {program?.splits?.map((split) => (
-        <Panel key={split.id}>
-          <View style={{ marginBottom: 8 }}>
-            <H3>{split.name}</H3>
-          </View>
+        <Caption>Exercise Type</Caption>
+        <DropDownSelect
+          items={ExerciseTypeOptions}
+          value={selectedExerciseType}
+          onChange={setSelectedExerciseType}
+          placeholder={data.exercise_type}
+          open={openEX}
+          setOpen={(open) => {
+            setOpenEX(open);
+            if (open) {
+              setOpenMG(false);
+              setOpenEQ(false);
+            }
+          }}
+          zIndex={openEX ? 2000 : 1000}
+          containerStyle={{ zIndex: openEX ? 2000 : 1000 }}
+          dropDownContainerStyle={{ zIndex: openEX ? 2000 : 1000 }}
+        />
+      </View>
+    );
+  }
 
-          <View>
-            {split.exercises
-              .sort((a, b) => a.order - b.order)
-              .map((ex) => (
-                <View
-                  key={ex.id}
-                  style={{
-                    paddingVertical: 1,
-                    borderTopWidth: 1,
-                    borderTopColor: colors.base[200],
-                  }}
-                >
-                  <P>
-                    {ex.exercise_name} - {ex.exercise_muscle_group} • {ex.exercise_equipment_type}
-                  </P>
-                  <Small>
-                    {ex.sets} sets × {ex.reps} reps
-                  </Small>
-                  {ex.exercise_description ? (
-                    <Caption>{ex.exercise_description}</Caption>
-                  ) : null}
-                </View>
-              ))}
-          </View>
-        </Panel>
-      ))}
-    </PageWrapper>
-  );
+  return <PageWrapper pageHeading="Edit Exercise">{body}</PageWrapper>;
 }

@@ -1,6 +1,13 @@
-import Text from "@components/Text";
+import { Text } from "@components";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import {
   FlatList,
   Modal,
@@ -16,25 +23,27 @@ function decimalsOf(n) {
   return i === -1 ? 0 : s.length - i - 1;
 }
 
-export default function KgDropdown({
-  value,
-  defaultValue,
-  onChange,
-  step = 2.5,
-  min = 0,
-  max = 500,
-  label,
-  placeholder = "0.0 kg",
-  disabled = false,
-  modalTitle = "Select weight (kg)",
-  containerStyle,
-  triggerStyle,
-  listItemHeight = 44,
-}) {
+export default forwardRef(function KgDropdown(
+  {
+    value,          // controlled value (number or numeric string)
+    defaultValue,   // initial uncontrolled value
+    onChange,       // (nextKg: number) => void
+
+    step = 2.5,
+    min = 0,
+    max = 500,
+    label,
+    placeholder = "0.0 kg",
+    disabled = false,
+    modalTitle = "Select weight (kg)",
+    triggerStyle,
+    listItemHeight = 44,
+  },
+  ref
+) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
 
-  // precision inferred from step (e.g. 2.5 -> 1, 0.25 -> 2)
   const precision = useMemo(() => decimalsOf(step), [step]);
 
   const clamp = useCallback(
@@ -51,49 +60,90 @@ export default function KgDropdown({
     [min, step, clamp, precision]
   );
 
-  // uncontrolled internal value
-  const [internal, setInternal] = useState(() => {
-    const start = value ?? defaultValue ?? min;
-    return snapToStep(start);
+  const normalizeNumber = useCallback(
+    (v) => {
+      if (v === null || v === undefined) return undefined;
+      if (typeof v === "number") return v;
+      const parsed = parseFloat(v);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    },
+    []
+  );
+
+  // --- internal state for uncontrolled mode ---
+  const [internalKg, setInternalKg] = useState(() => {
+    const startRaw = value ?? defaultValue ?? min;
+    const startNum = normalizeNumber(startRaw) ?? min;
+    return snapToStep(startNum);
   });
 
-  // keep internal in sync when controlled value changes
+  // --- sync with controlled value ---
   useEffect(() => {
-    if (value === undefined) return;
-    setInternal(snapToStep(value));
-  }, [value, snapToStep]);
+    if (value === undefined) return; // uncontrolled mode, do nothing
+    const numeric = normalizeNumber(value);
+    if (numeric === undefined) return;
+    setInternalKg(snapToStep(numeric));
+  }, [value, snapToStep, normalizeNumber]);
 
-  const current = value !== undefined ? value : internal;
+  // current value (always numeric)
+  const currentKg = useMemo(() => {
+    const numeric = normalizeNumber(value);
+    if (numeric !== undefined) return snapToStep(numeric);
+    return internalKg;
+  }, [value, internalKg, normalizeNumber, snapToStep]);
+
+  const emit = useCallback(
+    (next) => {
+      onChange?.(next); // parent gets numeric kg
+    },
+    [onChange]
+  );
 
   const setKg = useCallback(
     (kg) => {
       const next = snapToStep(kg);
-      if (value === undefined) setInternal(next);
-      onChange?.(next);
+      // update internal only if uncontrolled
+      if (value === undefined) setInternalKg(next);
+      emit(next);
     },
-    [onChange, snapToStep, value]
+    [value, snapToStep, emit]
   );
 
-  const increment = useCallback(() => setKg(current + step), [current, setKg, step]);
-  const decrement = useCallback(() => setKg(current - step), [current, setKg, step]);
+  const increment = useCallback(
+    () => setKg(currentKg + step),
+    [currentKg, setKg, step]
+  );
 
-  // generate list options from min..max with given step
+  const decrement = useCallback(
+    () => setKg(currentKg - step),
+    [currentKg, setKg, step]
+  );
+
   const options = useMemo(() => {
-    const out = []
+    const out = [];
     const steps = Math.floor((max - min) / step) + 1;
     for (let i = 0; i < steps; i++) {
       const v = Number((min + i * step).toFixed(precision));
       out.push(v);
     }
-    // ensure max is included (in case of floating rounding)
     if (out[out.length - 1] !== max) out.push(Number(max.toFixed(precision)));
     return out;
   }, [min, max, step, precision]);
 
   const display = useMemo(
-    () => (typeof current === "number" ? current.toFixed(precision) : placeholder),
-    [current, precision, placeholder]
+    () =>
+      typeof currentKg === "number"
+        ? currentKg.toFixed(precision)
+        : placeholder,
+    [currentKg, precision, placeholder]
   );
+
+  useImperativeHandle(ref, () => ({
+    getKg: () => currentKg,
+    setKg: (kg) => setKg(kg),
+    open: () => setOpen(true),
+    close: () => setOpen(false),
+  }));
 
   const subtle = colors.contrast?.[300] ?? "#999";
   const textColor = colors.contrast?.[100] ?? "#111";
@@ -101,7 +151,7 @@ export default function KgDropdown({
   const border = colors.base?.[300] ?? "#e5e5e5";
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <Pressable
         disabled={disabled}
         onPress={() => setOpen(true)}
@@ -122,26 +172,23 @@ export default function KgDropdown({
           triggerStyle,
         ]}
       >
-        <Text style={{ color: textColor, paddingHorizontal: 4}}>
+        <Text style={{ color: textColor, paddingHorizontal: 4 }}>
           {display} kg
         </Text>
         <Ionicons name="chevron-down" size={18} color={subtle} />
       </Pressable>
 
-      {/* Modal */}
       <Modal
         visible={open}
         transparent
         animationType={Platform.select({ ios: "slide", android: "fade" })}
         onRequestClose={() => setOpen(false)}
       >
-        {/* Dimmed background */}
         <Pressable
           onPress={() => setOpen(false)}
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }}
         />
 
-        {/* Sheet */}
         <View
           style={{
             position: "absolute",
@@ -155,7 +202,6 @@ export default function KgDropdown({
             paddingBottom: 16,
           }}
         >
-          {/* Header with steppers */}
           <View
             style={{
               paddingHorizontal: 16,
@@ -169,10 +215,16 @@ export default function KgDropdown({
             }}
           >
             <Pressable onPress={decrement} hitSlop={10}>
-              <Ionicons name="remove-circle-outline" size={24} color={subtle} />
+              <Ionicons
+                name="remove-circle-outline"
+                size={24}
+                color={subtle}
+              />
             </Pressable>
 
-            <Text style={{ fontWeight: "600", fontSize: 16, color: textColor }}>
+            <Text
+              style={{ fontWeight: "600", fontSize: 16, color: textColor }}
+            >
               {modalTitle}
             </Text>
 
@@ -181,13 +233,12 @@ export default function KgDropdown({
             </Pressable>
           </View>
 
-          {/* Quick grid/list of values */}
           <FlatList
             data={options}
             keyExtractor={(n) => String(n)}
             initialScrollIndex={Math.max(
               0,
-              options.findIndex((n) => n === snapToStep(current))
+              options.findIndex((n) => n === snapToStep(currentKg))
             )}
             getItemLayout={(_, index) => ({
               length: listItemHeight,
@@ -195,7 +246,7 @@ export default function KgDropdown({
               index,
             })}
             renderItem={({ item }) => {
-              const selected = item === snapToStep(current);
+              const selected = item === snapToStep(currentKg);
               return (
                 <Pressable
                   onPress={() => {
@@ -229,7 +280,6 @@ export default function KgDropdown({
             )}
           />
 
-          {/* Close row */}
           <View style={{ padding: 12, alignItems: "center" }}>
             <Pressable
               onPress={() => setOpen(false)}
@@ -249,4 +299,4 @@ export default function KgDropdown({
       </Modal>
     </View>
   );
-}
+});

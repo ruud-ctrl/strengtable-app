@@ -50,7 +50,50 @@ export const useWorkouts = () => {
         }
     );
 
-    const addWorkout = async (payload) => createWorkout(payload);
+    const deleteWorkoutMut = useDeleteMutation(
+        ["workout", "delete"],
+        // expects vars: { id }
+        ({ id }) => `/workout/${id}`,
+        {
+            onMutate: (qcLocal, { id }) => {
+                const client = qc ?? qcLocal;
 
-    return { workouts, addWorkout };
+                const prevList = client.getQueryData(LIST_KEY) || [];
+                const prevSingle = client.getQueryData(SINGLE_KEY(id));
+
+                // optimistic remove from list
+                client.setQueryData(
+                    LIST_KEY,
+                    prevList.filter((w) => w.id !== id)
+                );
+
+                // remove cached single workout
+                client.removeQueries({ queryKey: SINGLE_KEY(id), exact: true });
+
+                return {
+                    prevList,
+                    prevSingle,
+                    rollback: () => {
+                        client.setQueryData(LIST_KEY, prevList);
+                        if (prevSingle) {
+                            client.setQueryData(SINGLE_KEY(id), prevSingle);
+                        }
+                    },
+                };
+            },
+            onSuccess: () => {
+                setSuccess("Workout deleted!");
+            },
+            onError: (_err, _vars, ctx) => {
+                ctx?.rollback?.();
+                setError("Failed to delete workout.");
+            },
+            invalidations: [LIST_KEY],
+        }
+    );
+
+    const addWorkout = async (payload) => createWorkout({ payload });
+    const deleteWorkout = async (id) => deleteWorkoutMut({ id });
+
+    return { workouts, addWorkout, deleteWorkout };
 };

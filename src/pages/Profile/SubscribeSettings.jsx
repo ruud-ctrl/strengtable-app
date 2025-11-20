@@ -1,8 +1,7 @@
-import BottomSheet from '@components/BottomSheet'
-import DropdownSelect from '@components/Dropdown'
-import KeyValuePair from '@components/KeyValuePair'
 import { useRef, useState } from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
+
+import {DropDownSelect, KeyValuePair, BottomSheet, Text} from '@components'
 
 const SubscribeSettings = ({ data, setSubscription }) => {
   const [selectedSubscription, setSelectedSubscription] = useState(null);
@@ -35,7 +34,7 @@ const SubscribeSettings = ({ data, setSubscription }) => {
           </View>
         }
       >
-        <DropdownSelect
+        <DropDownSelect
           items={[{ label: "Subscribe", value: true }, { label: "Unsubscribe", value: false }]}
           value={selectedSubscription}
           onChange={onChangeSubscription}

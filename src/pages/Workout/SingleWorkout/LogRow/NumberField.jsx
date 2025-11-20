@@ -1,4 +1,4 @@
-import Text from "@components/Text";
+import { Text } from "@components";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
     forwardRef,

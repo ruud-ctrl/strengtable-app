@@ -71,7 +71,7 @@ export const useProgram = (programId) => {
         };
       },
       invalidations: [
-        ["profile"],            // so ProgramDetails status flips from canonical data
+        ["profile"],
         ["program", programId], // refresh this program’s detail
         ["programs"],           // refresh listing if you show “Active” badges there
       ],

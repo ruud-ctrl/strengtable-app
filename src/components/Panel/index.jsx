@@ -1,20 +1,39 @@
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 
-const Panel = ({children}) => {
+const Panel = ({ children ,onLongPress, onPress }) => {
+
+  const hasActions = onLongPress || onPress;
+
+  const style = {
+          backgroundColor: "#111",
+          padding: 12,
+          borderRadius: 8,
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: "#333",
+          gap: 4,
+        }
+
+  if (!hasActions) {
+    return (
+      <View
+        style={style}
+      >
+        {children}
+      </View>
+    );
+  }
 
   return (
-    <View style={{
-      backgroundColor: "#111",
-      paddingHorizontal: 8,
-      marginHorizontal: -8,
-      paddingVertical: 16,
-      gap: 4,
-
-    }}>
-
+    <TouchableOpacity
+      onLongPress={onLongPress}
+      onPress={onPress}
+      style={style}
+    >
       {children}
-    </View>
-  )
-}
+    </TouchableOpacity>
+  );
+};
+
 
 export default Panel

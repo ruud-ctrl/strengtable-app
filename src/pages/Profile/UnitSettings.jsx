@@ -1,8 +1,6 @@
-import BottomSheet from '@components/BottomSheet'
-import DropdownSelect from '@components/Dropdown'
-import KeyValuePair from '@components/KeyValuePair'
 import { useRef, useState } from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
+import { KeyValuePair, BottomSheet, DropDownSelect, Text } from '@components'
 import { UnitsOptions } from '@constants/enums'
 
 const UnitSettings = ({data, setUnits}) => {
@@ -36,7 +34,7 @@ const UnitSettings = ({data, setUnits}) => {
           </View>
         }
       >
-        <DropdownSelect
+        <DropDownSelect
           items={UnitsOptions}
           value={selectedUnits}
           onChange={onChangeUnits}

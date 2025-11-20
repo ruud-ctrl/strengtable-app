@@ -7,7 +7,7 @@ import { useTheme } from "@theme/useTheme";
 
 import Home from "@pages/Home";
 
-import Profile from "pages/Profile";
+import Profile from "@pages/Profile";
 
 import Programs from "@pages/Program";
 import CreateNewProgram from "@pages/Program/CreateNewProgram";
@@ -21,13 +21,14 @@ import Workouts from "@pages/Workout";
 import SingleWorkout from "@pages/Workout/SingleWorkout";
 
 import WeightHistory from "@pages/WeightHistory";
+import CreateNewWorkout from "@pages/Workout/CreateNewWorkout";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export default function Router() {
   return (
-    <NavigationContainer>
+    <NavigationContainer >
       <Tabs />
     </NavigationContainer>
   );
@@ -49,8 +50,8 @@ function Tabs() {
         options={{
           tabBarLabel: "",
           tabBarStyle: {
-            borderColor: theme == "dark" ? colors.base[0] : colors.contrast[900],
-            backgroundColor: colors.base[300],
+            borderColor: colors.tabBarBackgroundColor,
+            backgroundColor: colors.tabBarBackgroundColor,
           },
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="home-outline" color={color} />
@@ -120,7 +121,7 @@ function Tabs() {
         {() => (
           <StackWrapper
             colors={colors}
-            initial={{ name: "Profile", component: Profile, title: "Profile" }}
+            initial={{ name: "Profile", component: Profile }}
           />
         )}
       </Tab.Screen>
@@ -130,16 +131,8 @@ function Tabs() {
 
 function StackWrapper({ colors, initial }) {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        headerStyle: {
-          backgroundColor: colors.base[0],
-        },
-        headerTintColor: colors.contrast[100],
-      }}
-    >
-      <Stack.Screen name={initial.name} component={initial.component} options={{ title: initial.title }} />
+    <Stack.Navigator>
+      <Stack.Screen name={initial.name} component={initial.component} />
 
       <Stack.Screen name="SingleProgram" component={SingleProgram} options={{ title: "SingleProgram" }} />
       <Stack.Screen name="Create New Program" component={CreateNewProgram} options={{ title: "Create New Program" }} />
@@ -149,6 +142,7 @@ function StackWrapper({ colors, initial }) {
       <Stack.Screen name="Create New Exercise" component={CreateNewExercise} options={{ title: "Create New Exercise" }} />
       
       <Stack.Screen name="SingleWorkout" component={SingleWorkout} options={{ title: "SingleWorkout" }} />
+      <Stack.Screen name="Create New Workout" component={CreateNewWorkout} options={{ title: "Create New Workout" }} />
 
       <Stack.Screen name="WeightHistory" component={WeightHistory} options={{ title: "Weight History" }} />
 

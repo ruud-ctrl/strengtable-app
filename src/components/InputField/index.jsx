@@ -1,4 +1,4 @@
-import { Small } from "@components/Text"; // adjust to your Typography exports
+import { Small } from "@components";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   forwardRef,
@@ -84,7 +84,6 @@ const InputField = forwardRef(
     const placeholderColor = colors.contrast?.[300] ?? "#999";
     const subtle = colors.contrast?.[300] ?? "#999";
 
-    // expose a tiny imperative API
     useImperativeHandle(ref, () => ({
       focus: () => inputRef.current?.focus(),
       blur: () => inputRef.current?.blur(),

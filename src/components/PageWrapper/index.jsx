@@ -1,9 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@theme/useTheme";
+import { H1, Refresher } from "@components";
 
 /**
  * Props:
@@ -17,7 +18,7 @@ import { useTheme } from "@theme/useTheme";
  * - headerLeft?: React.ReactNode | (() => React.ReactNode)
  * - headerStyleOverride?: object
  * - headerTitleStyleOverride?: object
- * - scroll?: boolean (default: true)   👈 NEW
+ * - scroll?: boolean (default: true)
  */
 const PageWrapper = ({
   children,
@@ -31,7 +32,8 @@ const PageWrapper = ({
   headerLeft,
   headerStyleOverride,
   headerTitleStyleOverride,
-  scroll = true,            // 👈 NEW
+  pageHeading,
+  scroll = true,
 }) => {
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -86,7 +88,7 @@ const PageWrapper = ({
       headerRight: headerRightFn,
       headerLeft: headerLeftFn,
       headerStyle: {
-        backgroundColor: colors.base[500],
+        backgroundColor: colors.headerBackgroundColor,
         ...(headerStyleOverride || {}),
       },
       headerTitleStyle: {
@@ -118,10 +120,9 @@ const PageWrapper = ({
           refreshControl={
             onRefresh
               ? (
-                <RefreshControl
-                  tintColor={colors.contrast[0]}
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
+                <Refresher
+                  isFetching={refreshing}
+                  refetch={handleRefresh}
                 />
                 )
               : undefined
@@ -129,12 +130,13 @@ const PageWrapper = ({
           contentContainerStyle={{ flexGrow: 1 }}
         >
           <View style={{ gap: 8, padding: 8 }}>
+            {pageHeading && <H1 style={{ color: colors.text, marginBottom: 12 }}>{pageHeading}</H1>}
             {children}
           </View>
         </ScrollView>
       ) : (
-        // 🔥 No ScrollView — safe for FlatList/SectionList
         <View style={{ flex: 1, gap: 8, padding: 8 }}>
+          {pageHeading && <H1 style={{ color: colors.text, marginBottom: 12 }}>{pageHeading}</H1>}
           {children}
         </View>
       )}

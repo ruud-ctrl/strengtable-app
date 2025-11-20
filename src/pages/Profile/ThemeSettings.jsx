@@ -1,8 +1,6 @@
-import BottomSheet from '@components/BottomSheet'
-import DropdownSelect from '@components/Dropdown'
-import KeyValuePair from '@components/KeyValuePair'
 import { useRef, useState } from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
+import { KeyValuePair, Text, BottomSheet, DropDownSelect } from '@components'
 import { ThemeOptions } from '@constants/enums'
 
 const ThemeSettings = ({ data, setTheme }) => {
@@ -35,7 +33,7 @@ const ThemeSettings = ({ data, setTheme }) => {
           </View>
         }
       >
-        <DropdownSelect
+        <DropDownSelect
           items={ThemeOptions}
           value={selectedTheme}
           onChange={onChangeTheme}

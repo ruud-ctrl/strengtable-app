@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
 
 const ramp = (obj, key, def) => obj?.[key] ?? def;
 
-export default function Text({
+function TextComp({
   children,
   variant = 'p',
   color,
@@ -40,12 +40,13 @@ export default function Text({
   );
 }
 
-export const H1 = (p) => <Text variant="h1" {...p} />;
-export const H2 = (p) => <Text variant="h2" {...p} />;
-export const H3 = (p) => <Text variant="h3" {...p} />;
-export const H4 = (p) => <Text variant="h4" {...p} />;
-export const H5 = (p) => <Text variant="h5" {...p} />;
-export const H6 = (p) => <Text variant="h6" {...p} />;
-export const P  = (p) => <Text variant="p" {...p} />;
-export const Small = (p) => <Text variant="small" {...p} />;
-export const Caption = (p) => <Text variant="caption" {...p} />;
+export const Text = (p) => <TextComp {...p} />;
+export const H1 = (p) => <TextComp variant="h1" {...p} />;
+export const H2 = (p) => <TextComp variant="h2" {...p} />;
+export const H3 = (p) => <TextComp variant="h3" {...p} />;
+export const H4 = (p) => <TextComp variant="h4" {...p} />;
+export const H5 = (p) => <TextComp variant="h5" {...p} />;
+export const H6 = (p) => <TextComp variant="h6" {...p} />;
+export const P  = (p) => <TextComp variant="p" {...p} />;
+export const Small = (p) => <TextComp variant="small" {...p} />;
+export const Caption = (p) => <TextComp variant="caption" {...p} />;
